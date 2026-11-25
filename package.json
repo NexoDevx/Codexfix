@@ -1,0 +1,18 @@
+{
+  "name": "codemobile",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test test/server.test.mjs && node --test test/pasta.test.mjs && node --test test/busca.test.mjs",
+    "android:sync": "rm -rf android/app/src/main/assets/public && mkdir -p android/app/src/main/assets && cp -r www android/app/src/main/assets/public && cp capacitor.config.json android/app/src/main/assets/capacitor.config.json",
+    "android:build": "npm run android:sync && cd android && ./gradlew assembleDebug"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.2.0",
+    "@capacitor/cli": "^6.2.0",
+    "@capacitor/core": "^6.2.0",
+    "@capacitor/preferences": "^6.0.2"
+  }
+}

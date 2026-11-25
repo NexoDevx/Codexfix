@@ -1,0 +1,8 @@
+// Projeto Android do CodeMobile (Capacitor 6). Gradle 8.2.1 + Android Gradle Plugin 8.2.1 + JDK 17.
+buildscript {
+    repositories { google(); mavenCentral() }
+    dependencies { classpath 'com.android.tools.build:gradle:8.2.1' }
+}
+apply from: "variables.gradle"
+allprojects { repositories { google(); mavenCentral() } }
+tasks.register('clean', Delete) { delete rootProject.buildDir }

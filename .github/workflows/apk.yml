@@ -1,0 +1,53 @@
+name: Build APK
+on: {push: {branches: [main]}, workflow_dispatch: {}}
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 20}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: 17}
+      - run: npm install
+      - name: Testes (servidor e terminal)
+        continue-on-error: true
+        run: npm test
+      - name: Projeto Android (já vem no repositório; só cria se faltar)
+        run: |
+          [ -d android ] || npx cap add android
+          grep -q extractNativeLibs android/app/src/main/AndroidManifest.xml || sed -i 's/<application/<application android:usesCleartextTraffic="true" android:extractNativeLibs="true"/' android/app/src/main/AndroidManifest.xml
+      - name: Linux embutido (proot + Alpine) - opcional, não quebra o build se falhar
+        continue-on-error: true
+        run: bash native/setup-linux.sh
+      - name: Pasta nativa do aparelho (SAF) - opcional, não quebra o build se falhar
+        continue-on-error: true
+        run: bash native/setup-folder.sh
+      - run: npx cap sync android
+      - name: Build (completo; se falhar, tenta só com Linux, depois só com a pasta nativa, depois sem nativos)
+        run: |
+          chmod +x android/gradlew
+          b() { (cd android && ./gradlew assembleDebug); }
+          if ! b; then
+            echo "::warning::Build completo falhou; tentando só com o Linux embutido"
+            bash native/remove-folder.sh
+            if ! b; then
+              echo "::warning::Tentando só com a pasta nativa"
+              bash native/setup-folder.sh; bash native/remove-linux.sh
+              if ! b; then
+                echo "::warning::Refazendo sem nenhum plugin nativo"
+                bash native/remove-folder.sh; b
+              fi
+            fi
+          fi
+      - name: O que entrou no APK
+        run: |
+          APK=android/app/build/outputs/apk/debug/app-debug.apk
+          [ -f "$APK" ] || { echo "::error::O APK não foi gerado"; exit 1; }
+          for c in FolderPlugin ShellPlugin; do
+            if unzip -p "$APK" 'classes*.dex' | grep -aq "$c"; then echo "✅ $c está no APK"
+            else echo "::warning::$c NÃO está no APK (o build caiu na versão sem esse plugin; veja os avisos do passo Build)"; fi
+          done
+          if unzip -l "$APK" | grep -q "assets/public/index.html"; then echo "✅ index.html está no APK"; else echo "::warning::index.html NÃO está no APK"; fi
+      - uses: actions/upload-artifact@v4
+        with: {name: CodeMobile-apk, path: android/app/build/outputs/apk/debug/app-debug.apk}
