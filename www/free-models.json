@@ -1,1 +1,133 @@
-{"updated":null,"source":"vazio","count":0,"models":[]}
+{
+ "updated": "2026-11-26T16:52:39.354Z",
+ "source": "openrouter",
+ "count": 14,
+ "models": [
+  {
+   "id": "inclusionai/ling-3.2-flash:free",
+   "name": "inclusionAI: Ling 3.2 Flash (free)",
+   "ctx": 1048576,
+   "tools": true,
+   "vision": true,
+   "reasoning": true,
+   "created": 1794591958
+  },
+  {
+   "id": "baidu/ernie-5.5-flash-preview:free",
+   "name": "Baidu: ERNIE-5.5-Flash-Preview (free)",
+   "ctx": 1024000,
+   "tools": true,
+   "vision": false,
+   "reasoning": true,
+   "created": 1794333533
+  },
+  {
+   "id": "liquid/lfm-3-1.7b:free",
+   "name": "LiquidAI: LFM3-1.7B (free)",
+   "ctx": 262144,
+   "tools": true,
+   "vision": false,
+   "reasoning": true,
+   "created": 1794009477
+  },
+  {
+   "id": "particle-ai/particle-1:free",
+   "name": "Particle AI: Particle-1 (free)",
+   "ctx": 1048576,
+   "tools": true,
+   "vision": true,
+   "reasoning": true,
+   "created": 1793207893
+  },
+  {
+   "id": "recursive/flint-v1.0:free",
+   "name": "Recursive: Flint (free)",
+   "ctx": 262144,
+   "tools": true,
+   "vision": false,
+   "reasoning": true,
+   "created": 1792622765
+  },
+  {
+   "id": "nvidia/nemotron-3.5-super-vl:free",
+   "name": "NVIDIA: Nemotron 3.5 Super VL (free)",
+   "ctx": 1000000,
+   "tools": true,
+   "vision": true,
+   "reasoning": true,
+   "created": 1792076662
+  },
+  {
+   "id": "nvidia/nemotron-3.5-lightning:free",
+   "name": "NVIDIA: Nemotron 3.5 Lightning (free)",
+   "ctx": 1000000,
+   "tools": true,
+   "vision": false,
+   "reasoning": true,
+   "created": 1786452751
+  },
+  {
+   "id": "nvidia/nemotron-3-ultra-550b-a55b:free",
+   "name": "NVIDIA: Nemotron 3 Ultra (free)",
+   "ctx": 1000000,
+   "tools": true,
+   "vision": false,
+   "reasoning": true,
+   "created": 1780551208
+  },
+  {
+   "id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+   "name": "NVIDIA: Nemotron 3 Nano Omni (free)",
+   "ctx": 256000,
+   "tools": true,
+   "vision": true,
+   "reasoning": true,
+   "created": 1777393095
+  },
+  {
+   "id": "google/gemma-4-26b-a4b-it:free",
+   "name": "Google: Gemma 4 26B A4B  (free)",
+   "ctx": 262144,
+   "tools": true,
+   "vision": true,
+   "reasoning": true,
+   "created": 1775227989
+  },
+  {
+   "id": "google/gemma-4-31b-it:free",
+   "name": "Google: Gemma 4 31B (free)",
+   "ctx": 262144,
+   "tools": true,
+   "vision": true,
+   "reasoning": true,
+   "created": 1775148486
+  },
+  {
+   "id": "google/lyria-3-pro-preview",
+   "name": "Google: Lyria 3 Pro Preview",
+   "ctx": 1048576,
+   "tools": false,
+   "vision": true,
+   "reasoning": false,
+   "created": 1774907286
+  },
+  {
+   "id": "google/lyria-3-clip-preview",
+   "name": "Google: Lyria 3 Clip Preview",
+   "ctx": 1048576,
+   "tools": false,
+   "vision": true,
+   "reasoning": false,
+   "created": 1774907255
+  },
+  {
+   "id": "openrouter/free",
+   "name": "Free Models Router",
+   "ctx": 200000,
+   "tools": true,
+   "vision": true,
+   "reasoning": true,
+   "created": 1769917427
+  }
+ ]
+}
