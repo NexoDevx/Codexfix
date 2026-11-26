@@ -1,5 +1,7 @@
 name: Build APK
 on: {push: {branches: [main]}, workflow_dispatch: {}}
+permissions: {contents: write}
+concurrency: {group: 'apk-${{ github.ref }}', cancel-in-progress: true}
 jobs:
   apk:
     runs-on: ubuntu-latest
@@ -10,6 +12,8 @@ jobs:
       - uses: actions/setup-java@v4
         with: {distribution: temurin, java-version: 17}
       - run: npm install
+      - name: Módulos do app em dia (execucao.js, modelos.js dentro do index.html)
+        run: node scripts/injetar-modulos.mjs
       - name: Testes (servidor e terminal)
         continue-on-error: true
         run: npm test
@@ -51,3 +55,10 @@ jobs:
           if unzip -l "$APK" | grep -q "assets/public/index.html"; then echo "✅ index.html está no APK"; else echo "::warning::index.html NÃO está no APK"; fi
       - uses: actions/upload-artifact@v4
         with: {name: CodeMobile-apk, path: android/app/build/outputs/apk/debug/app-debug.apk}
+      - name: Publicar o APK em Releases (baixa o .apk direto, sem ZIP)
+        continue-on-error: true
+        env: {GH_TOKEN: '${{ github.token }}'}
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk CodeMobile.apk
+          gh release delete latest --yes --cleanup-tag >/dev/null 2>&1 || true
+          gh release create latest CodeMobile.apk --target "$GITHUB_SHA" --title "CodeMobile (último build)" --notes "APK gerado automaticamente do commit ${GITHUB_SHA::7}. Baixe CodeMobile.apk, instale e permita 'apps desconhecidos'."

@@ -1,6 +1,7 @@
 // CodeMobile server — sem dependências. Uso: node server.mjs  (PORT=8787 por padrão)
 // Serve o app, repassa o login do GitHub (CORS), roda comandos reais, busca páginas e guarda o estado em disco.
 import http from 'node:http';import crypto from 'node:crypto';import dns from 'node:dns/promises';import fs from 'node:fs';import path from 'node:path';import {fileURLToPath} from 'node:url';import {spawn,spawnSync} from 'node:child_process';
+import {fetchFree} from './scripts/modelos-gratis.mjs';
 const root=path.dirname(fileURLToPath(import.meta.url)),dir=path.join(root,'www'),DATA=process.env.CM_DATA||path.join(root,'data'),WS=path.join(DATA,'ws'),PORT=+process.env.PORT||8787;
 fs.mkdirSync(WS,{recursive:true});
 const MIME={'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.webmanifest':'application/manifest+json'};
@@ -82,6 +83,14 @@ const okTok=req=>{const a=String(req.headers.authorization||''),t=a.startsWith('
 const RL=new Map(),rate=(k,max)=>{const m=Math.floor(Date.now()/6e4),e=RL.get(k);if(!e||e[0]!=m){RL.set(k,[m,1]);return true}return++e[1]<=max};
 const RED=/(gh[pousr]_\w{20,}|sk-[\w-]{16,}|AIza[\w-]{30,}|Bearer\s+\S+|(?:token|key|secret|password)=\S+)/gi;
 const audit=(m,p,c,x)=>{try{fs.appendFileSync(path.join(DATA,'audit.log'),new Date().toISOString()+' '+m+' '+p+' '+c+(x?' '+String(x).replace(RED,'[redigido]').replace(/\s+/g,' ').slice(0,200):'')+'\n')}catch{}};
+/* modelos grátis (OpenRouter): cache de 30 min na memória e em disco; sem internet, usa o disco e por fim a cópia do app (www/free-models.json) */
+const FMF=path.join(DATA,'free-models.json'),FMB=path.join(dir,'free-models.json');let FMC=null,FMT=0;
+const rdj=f=>{try{return JSON.parse(fs.readFileSync(f,'utf8'))}catch{return null}};
+async function freeModels(force){
+ if(!force&&FMC&&Date.now()-FMT<18e5)return{...FMC,via:'cache (memória)'};
+ try{const j=await fetchFree();if(j.models.length){FMC=j;FMT=Date.now();fs.writeFileSync(FMF,JSON.stringify(j));return{...j,via:'ao vivo'}}}catch{}
+ for(const[f,via]of[[FMF,'cache (disco, sem internet agora)'],[FMB,'cópia do app (sem internet agora)']]){const d=rdj(f);if(d&&Array.isArray(d.models)&&d.models.length)return{...d,via}}
+ throw new Error('sem internet e sem cópia local da lista de modelos grátis')}
 const sameSite=req=>{const s=req.headers['sec-fetch-site'];return !s||s=='same-origin'||s=='none'};
 http.createServer(async(req,res)=>{
  try{const u=new URL(req.url,'http://x'),h=req.headers.host||'';
@@ -100,7 +109,7 @@ http.createServer(async(req,res)=>{
    if(P=='/api/ping')return send(res,200,{ok:1,auth:okTok(req)});
    if(!okTok(req)){audit(req.method,P,401);return send(res,401,{error:'não autorizado: token ausente ou inválido'})}
    if(!rate('all',600)||(P=='/api/exec'&&!rate('exec',60)))return send(res,429,{error:'muitas requisições, aguarde um minuto'});
-   const M={'/api/caps':'GET','/api/exec':'POST','/api/fetch':'GET','/api/state':'PUT','/api/rotate':'POST','/api/search':'GET','/api/ls':'GET','/api/dirread':'GET','/api/dirwrite':'POST'};
+   const M={'/api/caps':'GET','/api/exec':'POST','/api/fetch':'GET','/api/state':'PUT','/api/rotate':'POST','/api/search':'GET','/api/ls':'GET','/api/dirread':'GET','/api/dirwrite':'POST','/api/models/free':'GET'};
    if(!M[P])return send(res,404,{error:'rota desconhecida'});if(req.method!=M[P])return send(res,405,{error:'método não permitido (use '+M[P]+')'});
    try{
     if(P=='/api/caps')return send(res,200,caps());
@@ -112,6 +121,7 @@ http.createServer(async(req,res)=>{
      const d=fdir(b.path);if(!d)return send(res,403,{error:'pasta fora da área permitida'});let c=0;
      for(const[k,v]of Object.entries(b.files||{})){if(typeof v!='string')continue;const f=safeW(d,k);if(!f)continue;fs.mkdirSync(path.dirname(f),{recursive:true});fs.writeFileSync(f,v);c++}
      audit('POST',P,200,d+' '+c+' arquivos');return send(res,200,{count:c})}
+    if(P=='/api/models/free'){const r=await freeModels(u.searchParams.get('refresh')=='1');audit('GET',P,200,r.via+' '+r.count);return send(res,200,r)}
     if(P=='/api/search'){const r=await webSearch(u.searchParams.get('q'));audit('GET',P,200,r.q);return send(res,200,r)}
     if(P=='/api/rotate'){newTok();audit('POST',P,200);return send(res,200,{token:TOK})}
     if(P=='/api/exec'){let b;try{b=JSON.parse((await body(req)).toString())}catch{return send(res,400,{error:'JSON inválido'})}const r=await exec(b);audit('POST',P,200,'['+wsName(b.project)+'] '+b.cmd+' → exit '+r.code);return send(res,200,r)}

@@ -5,9 +5,11 @@
   "type": "module",
   "scripts": {
     "start": "node server.mjs",
-    "test": "node --test test/server.test.mjs && node --test test/pasta.test.mjs && node --test test/busca.test.mjs",
-    "android:sync": "rm -rf android/app/src/main/assets/public && mkdir -p android/app/src/main/assets && cp -r www android/app/src/main/assets/public && cp capacitor.config.json android/app/src/main/assets/capacitor.config.json",
-    "android:build": "npm run android:sync && cd android && ./gradlew assembleDebug"
+    "test": "node --test test/server.test.mjs && node --test test/pasta.test.mjs && node --test test/busca.test.mjs && node --test test/execucao.test.mjs && node --test test/modelos.test.mjs",
+    "android:sync": "node scripts/injetar-modulos.mjs && rm -rf android/app/src/main/assets/public && mkdir -p android/app/src/main/assets && cp -r www android/app/src/main/assets/public && cp capacitor.config.json android/app/src/main/assets/capacitor.config.json",
+    "android:build": "npm run android:sync && cd android && ./gradlew assembleDebug",
+    "modulos": "node scripts/injetar-modulos.mjs",
+    "modelos": "node scripts/atualizar-modelos.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^6.2.0",

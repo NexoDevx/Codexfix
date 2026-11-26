@@ -1,0 +1,23 @@
+name: Atualizar modelos grátis
+on:
+  schedule: [{cron: '17 6 * * *'}]
+  workflow_dispatch: {}
+permissions: {contents: write}
+concurrency: {group: modelos-gratis, cancel-in-progress: false}
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 20}
+      - name: Testes dos modelos grátis
+        run: node --test test/modelos.test.mjs
+      - name: Baixar a lista (OpenRouter, API pública sem chave)
+        run: node scripts/atualizar-modelos.mjs
+      - name: Salvar em www/free-models.json se mudou
+        run: |
+          git config user.name "codemobile-bot"
+          git config user.email "codemobile-bot@users.noreply.github.com"
+          git add www/free-models.json
+          if git diff --cached --quiet; then echo "Nada novo"; else git commit -m "chore: atualiza modelos grátis [skip ci]" && git push; fi

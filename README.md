@@ -173,3 +173,24 @@ O navegador bloqueia (CORS) a busca direta em buscadores. Agora a busca do agent
 2. **HTTP nativo do APK** (CapacitorHttp, não sofre CORS);
 3. `fetch` direto e, por último, o proxy leitor (se ativado).
 O servidor também detecta `java`, `javac`, `gradle` e `kotlinc` em `/api/caps`.
+
+## Executar de verdade, em muitas linguagens (modulos/execucao.js)
+O botão **Executar** e a ferramenta `run_file` agora usam o **Linux real** do app (Alpine via proot) ou o Termux quando eles estão ativos; sem Linux, tudo continua funcionando no navegador como antes.
+- **Linguagens (27):** Python, JavaScript (Node), TypeScript, Java, Kotlin, Go, Rust, C, C++, C#, Ruby, PHP, Lua, Perl, R, Bash, SQL (SQLite), Elixir, Haskell, Nim, Zig, OCaml, Fortran, COBOL, D e Tcl. `cm langs` mostra o que já está instalado.
+- **Instala sozinho o que faltar:** se o compilador não existe, o app instala (apk no Alpine, pkg no Termux) e roda. No modo Ask/Edits ele pergunta antes; no modo Auto, não.
+- **Dependências:** `requirements.txt`/`pyproject.toml` (venv por projeto, com `--system-site-packages`), `package.json` (npm), `go.mod`, `Cargo.toml` (cargo), `pom.xml` (Maven) e `build.gradle`, `Gemfile`, `composer.json`, `mix.exs`. O carimbo do arquivo evita reinstalar a cada execução. Se o código der `ModuleNotFoundError`/`Cannot find module`, o app instala o pacote certo (ex.: `cv2` → `opencv-python-headless`, `PIL` → `pillow`) e roda de novo, até 6 vezes, sem repetir o mesmo pacote.
+- **Comandos:** `cm run ARQUIVO [--input "texto"]`, `cm deps`, `cm langs`, `cm install <linguagem>` (ex.: `cm install kotlin`). A IA ganhou a ferramenta `install_deps` (projeto inteiro ou pacote avulso: pip, npm, apk, gem, composer, go).
+- **Sem Linux (só navegador):** Python agora instala pacotes puros do `requirements.txt` e dos imports que faltarem via micropip (pacotes com código nativo precisam do Linux).
+- **Limites honestos:** não foi testado num aparelho; os scripts foram validados com `sh -n` para todas as linguagens e executados de verdade (Python, Node, C, C++, Perl, Bash) no `npm test`. Swift, Dart e Julia não têm pacote no Alpine/Termux: continuam só via executor remoto (Ajustes). O Kotlin no Alpine vem do zip oficial do GitHub (JetBrains), sem checksum fixado. Nomes de pacote vêm do código/da IA: no modo Auto o app instala sem perguntar, então use Ask se não confia no projeto.
+
+## 🆓 Modelos grátis (modulos/modelos.js, scripts/modelos-gratis.mjs)
+**＋ → 🆓 Modelos grátis** (ou digite `/gratis`). Duas abas:
+- **OpenRouter · ao vivo:** lista os modelos de custo zero (API pública, sem chave) com contexto, ferramentas, imagens e raciocínio. Filtros e busca; **Usar este modelo** já define provedor e modelo. O agente precisa de ferramentas, então 🛠 vem ligado. O OpenRouter exige uma chave (grátis) mesmo para esses modelos.
+- **Outros provedores:** Groq, Gemini, Cerebras, NVIDIA, LLM7 etc. com a dica de cada um, botão de chave e **Usar**.
+- **De onde vêm os dados (nesta ordem):** servidor (`GET /api/models/free`, com cache de 30 min em memória e em disco) → OpenRouter direto (no APK, HTTP nativo, sem CORS) → `www/free-models.json` (cópia salva). Essa cópia começa **vazia** e é preenchida pelo workflow abaixo.
+
+## Workflows (GitHub Actions)
+- **Build APK** (a cada push em main ou manual): injeta os módulos, roda os testes, gera o APK com a rede de proteção de plugins e publica em **Releases → latest → CodeMobile.apk** (download direto do `.apk`, sem ZIP; além do artefato de sempre).
+- **Atualizar modelos grátis** (todo dia 06:17 UTC ou manual): roda os testes, baixa a lista e faz commit de `www/free-models.json` só se mudou (`[skip ci]`, não dispara outro build). Agendamentos do GitHub pausam após 60 dias sem atividade no repositório.
+- **Testes** (em pull requests ou manual): confere que o `index.html` tem os módulos atuais e roda `npm test`.
+- Os módulos ficam em `modulos/*.js` e são colocados dentro do `index.html` por `node scripts/injetar-modulos.mjs` (`npm run modulos`; `--check` só confere). Depois de editar um módulo, rode o comando e envie também o `index.html` (e `android/.../public/index.html`, que o script atualiza).
