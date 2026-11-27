@@ -1,17 +1,8 @@
 {
- "updated": "2026-11-26T16:52:39.354Z",
+ "updated": "2026-11-27T16:39:11.411Z",
  "source": "openrouter",
- "count": 14,
+ "count": 13,
  "models": [
-  {
-   "id": "inclusionai/ling-3.2-flash:free",
-   "name": "inclusionAI: Ling 3.2 Flash (free)",
-   "ctx": 1048576,
-   "tools": true,
-   "vision": true,
-   "reasoning": true,
-   "created": 1794591958
-  },
   {
    "id": "baidu/ernie-5.5-flash-preview:free",
    "name": "Baidu: ERNIE-5.5-Flash-Preview (free)",
